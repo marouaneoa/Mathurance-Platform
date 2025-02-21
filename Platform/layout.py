@@ -82,11 +82,11 @@ home_layout = dbc.Container([
     ),
     html.Div(id="output-data-upload"),
     dbc.Row([
-        dbc.Col(dcc.Graph(id="heatmap-triangle"), md=6),
-        dbc.Col(dcc.Graph(id="bar-factors"), md=6),
+        dbc.Col(dcc.Graph(id="heatmap-triangle", style={"display": "none"}), md=6),  # Hidden initially
+        dbc.Col(dcc.Graph(id="bar-factors", style={"display": "none"}), md=6),  # Hidden initially
     ]),
     dbc.Row([
-        dbc.Col(dcc.Graph(id="line-projection"), md=12)
+        dbc.Col(dcc.Graph(id="line-projection", style={"display": "none"}), md=12)  # Hidden initially
     ])
 ], fluid=True, style={"padding": "20px"})
 
@@ -119,16 +119,6 @@ layout = html.Div(
         html.Div(id='page-content', style={"margin-left": "2rem", "padding": "2rem"}),
         # Add custom CSS for the upload button
         html.Div(style={"display": "none"}, id="custom-css"),  # Placeholder for custom CSS
-        html.Div(
-            """
-            <style>
-                .upload-button:hover {
-                    background-color: #5a6268 !important;  /* Darker gray on hover */
-                    border-color: #545b62 !important;  /* Darker border on hover */
-                }
-            </style>
-            """,
-            # dangerously_set_inner_html={}  # Inject custom CSS
-        )
+       
     ]
 )

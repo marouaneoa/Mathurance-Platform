@@ -13,17 +13,32 @@ def register_callbacks(app):
          Output("heatmap-triangle", "figure"),
          Output("bar-factors", "figure"),
          Output("line-projection", "figure"),
-         Output("upload-data", "style")],  # Hide upload section after upload
-        [Input("upload-data", "contents")],
-        [State("upload-data", "filename")]
+         Output("upload-data", "style"),  # Hide upload section after upload
+         Output("heatmap-triangle", "style"),  # Control heatmap visibility
+         Output("bar-factors", "style"),  # Control bar chart visibility
+         Output("line-projection", "style")],  # Control line plot visibility
+        [Input("upload-data", "contents")],  # Input for file upload
+        [State("upload-data", "filename")]  # State for filename
     )
     def update_output(contents, filename):
         if contents is None:
-            return ["", {}, {}, {}, {"display": "block"}]
+            # No file uploaded yet
+            return (
+                ["Please upload a CSV file.", {}, {}, {}, {"display": "block"}],  # Show upload button
+                {"display": "none"},  # Hide heatmap
+                {"display": "none"},  # Hide bar chart
+                {"display": "none"},  # Hide line plot
+            )
         
         df = parse_contents(contents, filename)
         if df is None or df.empty:
-            return ["Error processing file or file is empty.", {}, {}, {}, {"display": "block"}]
+            # Error processing file
+            return (
+                ["Error processing file or file is empty.", {}, {}, {}, {"display": "block"}],  # Show upload button
+                {"display": "none"},  # Hide heatmap
+                {"display": "none"},  # Hide bar chart
+                {"display": "none"},  # Hide line plot
+            )
 
         # Create the claims triangle (cumulative)
         triangle = create_triangle(df)
@@ -87,6 +102,7 @@ def register_callbacks(app):
             yaxis_title="Claims Amount"
         )
         
+        # Create the table and message
         children = html.Div([
             html.H5(f"File {filename} successfully uploaded and processed."),
             html.H6("Data Preview:"),
@@ -97,7 +113,17 @@ def register_callbacks(app):
             )
         ])
         
-        return children, heatmap_fig, bar_fig, line_fig, {"display": "none"}
+        # Show plots and table after successful upload
+        return (
+            children,  # Table and message
+            heatmap_fig,  # Heatmap figure
+            bar_fig,  # Bar chart figure
+            line_fig,  # Line plot figure
+            {"display": "none"},  # Hide upload button
+            {"display": "block"},  # Show heatmap
+            {"display": "block"},  # Show bar chart
+            {"display": "block"},  # Show line plot
+        )
 
     @app.callback(
         Output('page-content', 'children'),
