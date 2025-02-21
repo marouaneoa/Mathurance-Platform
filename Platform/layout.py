@@ -1,5 +1,7 @@
 from dash import html, dcc
 import dash_bootstrap_components as dbc
+# import Style from Dash Bootstrap Components
+from dash_bootstrap_components._components import Offcanvas
 
 # Sidebar Layout
 sidebar = dbc.Offcanvas(
@@ -15,7 +17,7 @@ sidebar = dbc.Offcanvas(
                         "color": "white",  # White text
                         "margin": "5px", 
                         "borderRadius": "5px",
-                        "backgroundColor": "#6c757d",  # Gray background for buttons
+                        "backgroundColor": "#1357b3",  # Darker shade of base color
                     }
                 ),
                 dbc.NavLink(
@@ -26,7 +28,7 @@ sidebar = dbc.Offcanvas(
                         "color": "white",  # White text
                         "margin": "5px", 
                         "borderRadius": "5px",
-                        "backgroundColor": "#6c757d",  # Gray background for buttons
+                        "backgroundColor": "#1357b3",  # Darker shade of base color
                     }
                 ),
             ],
@@ -38,15 +40,15 @@ sidebar = dbc.Offcanvas(
     title="Mathurance Platform",
     is_open=False,
     placement="start",
-    style={"backgroundColor": "#495057"},  # Dark gray background for sidebar
+    style={"backgroundColor": "#1675e0"},  # Base color for sidebar
 )
 
 # Home Page Layout
 home_layout = dbc.Container([
-    html.H1("Welcome to the Mathurance Platform", className="my-4", style={"color": "white"}),
+    html.H1("Welcome to the Mathurance Platform", className="my-4", style={"color": "#1675e0"}),
     html.P(
         "Your one-stop solution for advanced actuarial analysis and claims forecasting.",
-        style={"color": "white", "fontSize": "18px", "marginBottom": "30px"}
+        style={"color": "#333333", "fontSize": "18px", "marginBottom": "30px"}
     ),
     dcc.Upload(
         id="upload-data",
@@ -67,11 +69,11 @@ home_layout = dbc.Container([
                 "lineHeight": "60px",
                 "borderWidth": "1px",
                 "borderStyle": "solid",
-                "borderColor": "#6c757d",  # Gray border
+                "borderColor": "#1675e0",  # Base color for border
                 "borderRadius": "5px",
                 "textAlign": "center",
                 "margin": "10px",
-                "backgroundColor": "#6c757d",  # Gray background
+                "backgroundColor": "#1675e0",  # Base color for button
                 "color": "white",  # White text
                 "cursor": "pointer",  # Pointer cursor on hover
                 "transition": "background-color 0.3s",  # Smooth transition for hover effect
@@ -92,18 +94,18 @@ home_layout = dbc.Container([
 
 # About Page Layout
 about_layout = dbc.Container([
-    html.H1("About Mathurance Platform", className="my-4", style={"color": "white"}),
+    html.H1("About Mathurance Platform", className="my-4", style={"color": "#1675e0"}),
     html.P(
         "The Mathurance Platform is designed to provide advanced actuarial tools for claims forecasting and analysis. "
         "Our platform leverages the Chain-Ladder method to help you make data-driven decisions with confidence.",
-        style={"color": "white", "fontSize": "18px"}
+        style={"color": "#333333", "fontSize": "18px"}
     )
 ], fluid=True, style={"padding": "20px"})
 
 # Main Layout
 layout = html.Div(
     style={
-        "backgroundColor": "#A9A9A9",  # Light gray background
+        "backgroundColor": "#f0f0f0",  # Light gray background for the app
         "minHeight": "100vh",  # Ensure the background covers the entire viewport height
     },
     children=[
@@ -111,14 +113,19 @@ layout = html.Div(
         dbc.Button(
             html.I(className="fas fa-bars"),  # FontAwesome hamburger icon
             id="sidebar-toggle",
-            color="secondary",  # Gray button
+            color="primary",  # Base color for button
             className="m-3",
             style={"cursor": "pointer"}  # Pointer cursor on hover
         ),
         sidebar,
         html.Div(id='page-content', style={"margin-left": "2rem", "padding": "2rem"}),
+        
         # Add custom CSS for the upload button
-        html.Div(style={"display": "none"}, id="custom-css"),  # Placeholder for custom CSS
-       
+        #html.Style("""
+         #   .upload-button:hover {
+          #      background-color: #1357b3 !important;  /* Darker shade of base color on hover */
+           #     border-color: #1357b3 !important;  /* Darker border on hover */
+            #}
+        #""")
     ]
 )
