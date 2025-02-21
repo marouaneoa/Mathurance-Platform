@@ -19,7 +19,7 @@ def register_callbacks(app):
     )
     def update_output(contents, filename):
         if contents is None:
-            return ["Please upload a CSV file.", {}, {}, {}, {"display": "block"}]
+            return ["", {}, {}, {}, {"display": "block"}]
         
         df = parse_contents(contents, filename)
         if df is None or df.empty:

@@ -6,7 +6,7 @@ from callbacks import register_callbacks
 # Initialize the Dash app
 external_stylesheets = [dbc.themes.BOOTSTRAP, "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"]
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-app.title = "Chain-Ladder Dashboard"
+app.title = "Mathurance Dashboard"
 
 # Set the app layout
 app.layout = layout
