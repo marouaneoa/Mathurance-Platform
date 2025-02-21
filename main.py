@@ -14,28 +14,41 @@ import plotly.graph_objects as go
 def parse_contents(contents, filename):
     content_type, content_string = contents.split(',')
     decoded = base64.b64decode(content_string)
+    
     try:
-        df = pd.read_csv(io.StringIO(decoded.decode('utf-8')))
+        if filename.endswith('.csv'):
+            df = pd.read_csv(io.StringIO(decoded.decode('utf-8')))
+        elif filename.endswith(('.xls', '.xlsx', '.xlsm')):  # Added .xlsm support
+            df = pd.read_excel(io.BytesIO(decoded))
+        elif filename.endswith('.json'):
+            df = pd.read_json(io.StringIO(decoded.decode('utf-8')))
+        else:
+            return None  # Unsupported file format
+        
+        # Clean up column names
+        df.columns = [col.strip() for col in df.columns]
+
+        # Convert settlement amounts to numeric
+        df['Règlement'] = pd.to_numeric(df['Règlement'], errors='coerce')
+        
+        # Convert Date Survenance to datetime format
+        df['Date Survenance'] = pd.to_datetime(df['Date Survenance'], errors='coerce')
+        
+        # Create a new column for Accident Year from the Date Survenance
+        df['Accident Year'] = df['Date Survenance'].dt.year
+        
+        # Compute the development period as the difference between the settlement year (Exercice) and the accident year
+        df['Development Period'] = df['Exercice'] - df['Accident Year']
+        
+        # Filter out any rows with negative development periods
+        df = df[df['Development Period'] >= 0]
+
+        return df
+    
     except Exception as e:
-        print("Error reading CSV:", e)
+        print("Error reading file:", e)
         return None
 
-    # Clean up column names
-    df.columns = [col.strip() for col in df.columns]
-
-    # Convert settlement amounts to numeric
-    df['Règlement'] = pd.to_numeric(df['Règlement'], errors='coerce')
-    
-    # Convert Date Survenance to datetime format
-    df['Date Survenance'] = pd.to_datetime(df['Date Survenance'], errors='coerce')
-    # Create a new column for Accident Year from the Date Survenance
-    df['Accident Year'] = df['Date Survenance'].dt.year
-    # Compute the development period as the difference between the settlement year (Exercice) and the accident year
-    df['Development Period'] = df['Exercice'] - df['Accident Year']
-    # Filter out any rows with negative development periods
-    df = df[df['Development Period'] >= 0]
-
-    return df
 
 
 def create_triangle(df):
