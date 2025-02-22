@@ -124,12 +124,34 @@ def register_callbacks(app, model):
             
             # Create the table and message
             children = html.Div([
-                html.H5(f"File {filename} successfully uploaded and processed."),
-                html.H6("Data Preview:"),
+                html.H5(f"File {filename} successfully uploaded and processed.", style={"color": "#1675e0", "marginBottom": "20px"}),
+                html.H6("Data Preview:", style={"color": "#333333", "marginBottom": "10px"}),
                 dash.dash_table.DataTable(
                     data=df.head(10).to_dict("records"),
                     columns=[{"name": i, "id": i} for i in df.columns],
                     page_size=10,
+                    style_table={
+                        "border": "1px solid #ddd",  # Add border to the table
+                        "borderRadius": "5px",  # Rounded corners
+                        "overflowX": "auto",  # Enable horizontal scrolling if needed
+                    },
+                    style_header={
+                        "backgroundColor": "#1675e0",  # Header background color
+                        "color": "white",  # Header text color
+                        "fontWeight": "bold",  # Bold header text
+                        "textAlign": "center",  # Center-align header text
+                    },
+                    style_cell={
+                        "textAlign": "left",  # Align cell text to the left
+                        "padding": "10px",  # Add padding to cells
+                        "border": "1px solid #ddd",  # Add borders to cells
+                    },
+                    style_data_conditional=[
+                        {
+                            "if": {"row_index": "odd"},  # Alternate row colors
+                            "backgroundColor": "#f9f9f9",  # Light gray for odd rows
+                        }
+                    ],
                 )
             ])
             
