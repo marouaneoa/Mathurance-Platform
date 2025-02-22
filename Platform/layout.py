@@ -20,6 +20,17 @@ sidebar = dbc.Offcanvas(
                     }
                 ),
                 dbc.NavLink(
+                    "Scenario Analysis",  # New page
+                    href="/scenario-analysis", 
+                    active="exact", 
+                    style={
+                        "color": "white",  # White text
+                        "margin": "5px", 
+                        "borderRadius": "5px",
+                        "backgroundColor": "#1357b3",  # Darker shade of base color
+                    }
+                ),
+                dbc.NavLink(
                     "About", 
                     href="/about", 
                     active="exact", 
@@ -130,6 +141,101 @@ home_layout = dbc.Container([
     ]),
 ], fluid=True, style={"padding": "20px"})
 
+# Scenario Analysis Page Layout
+scenario_analysis_layout = dbc.Container([
+    html.H1("Scenario Analysis", className="my-4", style={"color": "#1675e0"}),
+    html.P(
+        "Simulate different scenarios for claims forecasting by adjusting inflation rates and development factors.",
+        style={"color": "#333333", "fontSize": "18px", "marginBottom": "30px"}
+    ),
+    dbc.Row([
+        dbc.Col(
+            dbc.Card(
+                dbc.CardBody([
+                    html.H5("Adjust Inflation Rates", className="card-title"),
+                    html.Label("Inflation Rate for 2024 (%)"),
+                    dcc.Input(
+                        id="inflation-rate-2024",
+                        type="number",
+                        value=5.0,  # Default value
+                        min=0,
+                        max=20,
+                        step=0.1,
+                    ),
+                    html.Label("Inflation Rate for 2025 (%)"),
+                    dcc.Input(
+                        id="inflation-rate-2025",
+                        type="number",
+                        value=5.0,  # Default value
+                        min=0,
+                        max=20,
+                        step=0.1,
+                    ),
+                ]),
+            ),
+            md=6,
+        ),
+        dbc.Col(
+            dbc.Card(
+                dbc.CardBody([
+                    html.H5("Adjust Development Factors", className="card-title"),
+                    html.Label("Development Factor for Period 1 to 2"),
+                    dcc.Slider(
+                        id="dev-factor-1-2",
+                        min=1.0,
+                        max=2.0,
+                        step=0.1,
+                        value=1.5,  # Default value
+                        marks={i: str(i) for i in [1.0, 1.5, 2.0]},
+                    ),
+                    html.Label("Development Factor for Period 2 to 3"),
+                    dcc.Slider(
+                        id="dev-factor-2-3",
+                        min=1.0,
+                        max=2.0,
+                        step=0.1,
+                        value=1.3,  # Default value
+                        marks={i: str(i) for i in [1.0, 1.5, 2.0]},
+                    ),
+                ]),
+            ),
+            md=6,
+        ),
+    ]),
+    dbc.Row([
+        dbc.Col(
+            dcc.Graph(id="scenario-line-plot"),
+            md=12,
+        ),
+    ]),
+    dbc.Row([
+        dbc.Col(
+            html.Div(id="scenario-summary-table"),
+            md=12,
+        ),
+    ]),
+    dbc.Row([
+        dbc.Col(
+            dcc.Graph(id="inflation-trend-plot"),
+            md=6,
+        ),
+        dbc.Col(
+            dcc.Graph(id="claims-by-product-plot"),
+            md=6,
+        ),
+    ]),
+    dbc.Row([
+        dbc.Col(
+            dcc.Graph(id="claims-by-sub-branch-plot"),
+            md=6,
+        ),
+        dbc.Col(
+            dcc.Graph(id="claims-forecast-plot"),
+            md=6,
+        ),
+    ]),
+], fluid=True, style={"padding": "20px"})
+
 # About Page Layout
 about_layout = dbc.Container([
     html.H1("About Mathurance Platform", className="my-4", style={"color": "#1675e0"}),
@@ -148,6 +254,8 @@ layout = html.Div(
     },
     children=[
         dcc.Location(id='url', refresh=False),
+        dcc.Store(id="stored-data"),  # Store for uploaded data
+        dcc.Store(id="stored-scenario-inputs"),  # Store for scenario analysis inputs
         dbc.Button(
             html.I(className="fas fa-bars"),  # FontAwesome hamburger icon
             id="sidebar-toggle",

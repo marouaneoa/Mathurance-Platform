@@ -106,3 +106,11 @@ def project_triangle(triangle, factors):
             last_val *= factor
             triangle_proj.at[idx, dev] = last_val
     return triangle_proj
+
+    def adjust_claims_for_inflation(claims_df, inflation_df, dev_factor_1_2, dev_factor_2_3):
+        """
+        Adjust claims based on development factors and inflation rates.
+        """
+        claims_df["adjusted_claims"] = claims_df["claims"] * dev_factor_1_2 * dev_factor_2_3
+        claims_df["adjusted_claims"] *= (1 + inflation_df.set_index("year").loc[claims_df["year"], "inflation"].values / 100)
+        return claims_df

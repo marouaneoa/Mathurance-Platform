@@ -3,34 +3,47 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 from utils import parse_contents, create_triangle, compute_chain_ladder_factors, project_triangle
-from layout import home_layout, about_layout
+from layout import home_layout, about_layout, scenario_analysis_layout
 from dash import html
 import dash
+import pandas as pd
 
 def register_callbacks(app):
+    # Callback to store uploaded data
+    @app.callback(
+        Output("stored-data", "data"),
+        [Input("upload-data", "contents")],
+        [State("upload-data", "filename")]
+    )
+    def store_uploaded_data(contents, filename):
+        if contents is None:
+            raise dash.exceptions.PreventUpdate
+        df = parse_contents(contents, filename)
+        return df.to_dict("records") if df is not None else None
+
+    # Callback to update the home page outputs
     @app.callback(
         [Output("output-data-upload", "children"),
          Output("heatmap-triangle", "figure"),
          Output("bar-factors", "figure"),
          Output("line-projection", "figure"),
-         Output("cumulative-claims", "figure"),  # New output
-         Output("claims-distribution", "figure"),  # New output
-         Output("reserve-summary", "children"),  # New output
-         Output("upload-data", "style"),  # Hide upload section after upload
-         Output("heatmap-triangle", "style"),  # Control heatmap visibility
-         Output("bar-factors", "style"),  # Control bar chart visibility
-         Output("line-projection", "style"),  # Control line plot visibility
-         Output("cumulative-claims", "style"),  # New output
-         Output("claims-distribution", "style"),  # New output
-         Output("reserve-summary", "style")],  # New output
-        [Input("upload-data", "contents")],  # Input for file upload
-        [State("upload-data", "filename")]  # State for filename
+         Output("cumulative-claims", "figure"),
+         Output("claims-distribution", "figure"),
+         Output("reserve-summary", "children"),
+         Output("upload-data", "style"),
+         Output("heatmap-triangle", "style"),
+         Output("bar-factors", "style"),
+         Output("line-projection", "style"),
+         Output("cumulative-claims", "style"),
+         Output("claims-distribution", "style"),
+         Output("reserve-summary", "style")],
+        [Input("stored-data", "data")]
     )
-    def update_output(contents, filename):
-        if contents is None:
+    def update_home_page(stored_data):
+        if stored_data is None:
             # No file uploaded yet
             return (
-                ["Please upload a CSV file.", {}, {}, {}, {}, {}, {}, {"display": "block"}],  # Show upload button
+                ["Please upload a CSV file.", {}, {}, {}, {}, {}, {}, {"display": "block"}],
                 {"display": "none"},  # Hide heatmap
                 {"display": "none"},  # Hide bar chart
                 {"display": "none"},  # Hide line plot
@@ -38,12 +51,12 @@ def register_callbacks(app):
                 {"display": "none"},  # Hide claims distribution plot
                 {"display": "none"},  # Hide reserve summary
             )
-        
-        df = parse_contents(contents, filename)
-        if df is None or df.empty:
+
+        df = pd.DataFrame(stored_data)
+        if df.empty:
             # Error processing file
             return (
-                ["Error processing file or file is empty.", {}, {}, {}, {}, {}, {}, {"display": "block"}],  # Show upload button
+                ["Error processing file or file is empty.", {}, {}, {}, {}, {}, {}, {"display": "block"}],
                 {"display": "none"},  # Hide heatmap
                 {"display": "none"},  # Hide bar chart
                 {"display": "none"},  # Hide line plot
@@ -144,7 +157,7 @@ def register_callbacks(app):
         
         # Create the table and message
         children = html.Div([
-            html.H5(f"File {filename} successfully uploaded and processed."),
+            html.H5(f"File uploaded and processed."),
             html.H6("Data Preview:"),
             dash.dash_table.DataTable(
                 data=df.head(10).to_dict("records"),
@@ -171,16 +184,20 @@ def register_callbacks(app):
             {"display": "block"},  # Show reserve summary
         )
 
+    # Callback to display the correct page
     @app.callback(
         Output('page-content', 'children'),
         [Input('url', 'pathname')]
     )
     def display_page(pathname):
-        if pathname == '/about':
+        if pathname == '/scenario-analysis':
+            return scenario_analysis_layout
+        elif pathname == '/about':
             return about_layout
         else:
             return home_layout
 
+    # Callback to toggle sidebar
     @app.callback(
         Output("sidebar", "is_open"),
         [Input("sidebar-toggle", "n_clicks")],
@@ -191,26 +208,119 @@ def register_callbacks(app):
             return not is_open
         return is_open
 
-    # New callback for model selection
+    # Callback to update scenario analysis
+    # Callback to update scenario analysis with additional features
     @app.callback(
-        Output("selected-model-output", "children"),  # Placeholder for model selection output
-        [Input("reserving-model-dropdown", "value")]
+    [Output("scenario-line-plot", "figure"),
+     Output("scenario-summary-table", "children"),
+     Output("inflation-trend-plot", "figure"),
+     Output("claims-by-product-plot", "figure"),
+     Output("claims-by-sub-branch-plot", "figure"),
+     Output("claims-forecast-plot", "figure")],
+    [Input("stored-data", "data"),
+     Input("inflation-rate-2024", "value"),
+     Input("inflation-rate-2025", "value"),
+     Input("dev-factor-1-2", "value"),
+     Input("dev-factor-2-3", "value")]
     )
-    def update_model_selection(selected_model):
-        # Log the selected model (for now)
-        print(f"Selected Model: {selected_model}")
-        return f"Selected Model: {selected_model}"
-    
-    @app.callback(
-    Output("model-selection-row", "style"),  # Control visibility of the model selection row
-    [Input("upload-data", "contents"),  # Triggered when data is uploaded
-     Input("reserving-model-dropdown", "value")],  # Triggered when a model is selected
-    [State("upload-data", "filename")]  # State for filename
-    )
-    def hide_model_selection(contents, selected_model, filename):
-    # Hide the model selection row if data is uploaded and a model is selected
-        if contents is not None and selected_model is not None:
-            return {"display": "none"}  # Hide the row
-        return {"display": "block"}  # Show the rowi
-    
-    
+    def update_scenario_analysis(stored_data, inflation_2024, inflation_2025, dev_factor_1_2, dev_factor_2_3):
+        if stored_data is None:
+            raise dash.exceptions.PreventUpdate
+
+        df = pd.DataFrame(stored_data)
+
+        # Example historical inflation data
+        inflation_data = {
+            "year": list(range(1998, 2024)),
+            "inflation": [5.0, 2.6, 0.3, 4.2, 1.4, 4.3, 4.0, 1.4, 2.3, 3.7, 4.9, 5.7, 3.9, 4.5, 8.9, 3.3, 2.9, 4.8, 6.4, 5.7, 4.3, 2.0, 2.4, 7.2, 9.3]
+        }
+        inflation_df = pd.DataFrame(inflation_data)
+
+        # Add user-defined inflation rates for 2024 and 2025
+        inflation_df = inflation_df.append(
+            {"year": 2024, "inflation": inflation_2024}, ignore_index=True
+        )
+        inflation_df = inflation_df.append(
+            {"year": 2025, "inflation": inflation_2025}, ignore_index=True
+        )
+
+        # Adjust claims based on development factors and inflation
+        df["adjusted_claims"] = df["Règlement"] * dev_factor_1_2 * dev_factor_2_3
+        df["adjusted_claims"] *= (1 + inflation_df.set_index("year").loc[df["Accident Year"], "inflation"].values / 100)
+
+        # Forecast claims for 2024 and 2025
+        forecast_years = [2024, 2025]
+        forecast_claims = [
+            df["adjusted_claims"].iloc[-1] * (1 + inflation_df.set_index("year").loc[year, "inflation"] / 100)
+            for year in forecast_years
+        ]
+        forecast_df = pd.DataFrame({
+            "year": forecast_years,
+            "claims": forecast_claims,
+        })
+
+        # Combine historical and forecasted claims
+        combined_df = pd.concat([df, forecast_df])
+
+        # --- Plot 1: Adjusted Claims Over Time ---
+        line_fig = px.line(
+            combined_df,
+            x="year",
+            y="adjusted_claims",
+            labels={"x": "Year", "y": "Adjusted Claims"},
+            title="Scenario Analysis: Adjusted Claims Over Time"
+        )
+
+        # --- Plot 2: Inflation Rate Trends ---
+        inflation_fig = px.line(
+            inflation_df,
+            x="year",
+            y="inflation",
+            labels={"x": "Year", "y": "Inflation Rate (%)"},
+            title="Inflation Rate Trends"
+        )
+
+        # --- Plot 3: Claims Distribution by Product ---
+        claims_by_product = df.groupby("Désignation Produit")["Règlement"].sum().reset_index()
+        claims_by_product_fig = px.bar(
+            claims_by_product,
+            x="Désignation Produit",
+            y="Règlement",
+            labels={"x": "Product", "y": "Total Claims"},
+            title="Claims Distribution by Product"
+        )
+
+        # --- Plot 4: Claims Distribution by Sub-Branch ---
+        claims_by_sub_branch = df.groupby("Sous-Branche")["Règlement"].sum().reset_index()
+        claims_by_sub_branch_fig = px.bar(
+            claims_by_sub_branch,
+            x="Sous-Branche",
+            y="Règlement",
+            labels={"x": "Sub-Branch", "y": "Total Claims"},
+            title="Claims Distribution by Sub-Branch"
+        )
+
+        # --- Plot 5: Claims Forecast by Development Period ---
+        claims_forecast_fig = px.line(
+            combined_df,
+            x="year",
+            y="adjusted_claims",
+            labels={"x": "Year", "y": "Adjusted Claims"},
+            title="Claims Forecast by Development Period"
+        )
+
+        # Create summary table
+        summary_table = dash.dash_table.DataTable(
+            data=combined_df.to_dict("records"),
+            columns=[{"name": i, "id": i} for i in combined_df.columns],
+            page_size=10,
+        )
+
+        return (
+            line_fig,  # Adjusted Claims Over Time
+            summary_table,  # Summary Table
+            inflation_fig,  # Inflation Rate Trends
+            claims_by_product_fig,  # Claims Distribution by Product
+            claims_by_sub_branch_fig,  # Claims Distribution by Sub-Branch
+            claims_forecast_fig,  # Claims Forecast by Development Period
+        )
