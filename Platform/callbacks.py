@@ -13,10 +13,16 @@ def register_callbacks(app):
          Output("heatmap-triangle", "figure"),
          Output("bar-factors", "figure"),
          Output("line-projection", "figure"),
+         Output("cumulative-claims", "figure"),  # New output
+         Output("claims-distribution", "figure"),  # New output
+         Output("reserve-summary", "children"),  # New output
          Output("upload-data", "style"),  # Hide upload section after upload
          Output("heatmap-triangle", "style"),  # Control heatmap visibility
          Output("bar-factors", "style"),  # Control bar chart visibility
-         Output("line-projection", "style")],  # Control line plot visibility
+         Output("line-projection", "style"),  # Control line plot visibility
+         Output("cumulative-claims", "style"),  # New output
+         Output("claims-distribution", "style"),  # New output
+         Output("reserve-summary", "style")],  # New output
         [Input("upload-data", "contents")],  # Input for file upload
         [State("upload-data", "filename")]  # State for filename
     )
@@ -24,20 +30,26 @@ def register_callbacks(app):
         if contents is None:
             # No file uploaded yet
             return (
-                ["Please upload a CSV file.", {}, {}, {}, {"display": "block"}],  # Show upload button
+                ["Please upload a CSV file.", {}, {}, {}, {}, {}, {}, {"display": "block"}],  # Show upload button
                 {"display": "none"},  # Hide heatmap
                 {"display": "none"},  # Hide bar chart
                 {"display": "none"},  # Hide line plot
+                {"display": "none"},  # Hide cumulative claims plot
+                {"display": "none"},  # Hide claims distribution plot
+                {"display": "none"},  # Hide reserve summary
             )
         
         df = parse_contents(contents, filename)
         if df is None or df.empty:
             # Error processing file
             return (
-                ["Error processing file or file is empty.", {}, {}, {}, {"display": "block"}],  # Show upload button
+                ["Error processing file or file is empty.", {}, {}, {}, {}, {}, {}, {"display": "block"}],  # Show upload button
                 {"display": "none"},  # Hide heatmap
                 {"display": "none"},  # Hide bar chart
                 {"display": "none"},  # Hide line plot
+                {"display": "none"},  # Hide cumulative claims plot
+                {"display": "none"},  # Hide claims distribution plot
+                {"display": "none"},  # Hide reserve summary
             )
 
         # Create the claims triangle (cumulative)
@@ -102,6 +114,34 @@ def register_callbacks(app):
             yaxis_title="Claims Amount"
         )
         
+        # --- Plot 4: Cumulative Claims Over Time ---
+        cumulative_fig = px.line(
+            df.groupby('Date Survenance')['Règlement'].sum().cumsum().reset_index(),
+            x='Date Survenance',
+            y='Règlement',
+            title="Cumulative Claims Over Time"
+        )
+        
+        # --- Plot 5: Claims Distribution by Year ---
+        claims_dist_fig = px.histogram(
+            df,
+            x='Accident Year',
+            y='Règlement',
+            histfunc='sum',
+            title="Claims Distribution by Accident Year"
+        )
+        
+        # --- Table: Reserve Summary ---
+        reserve_summary = df.groupby('Accident Year')['Règlement'].sum().reset_index()
+        reserve_summary['Projected Ultimate'] = [ultimate[i] for i in range(len(reserve_summary))]
+        reserve_summary['Reserve'] = reserve_summary['Projected Ultimate'] - reserve_summary['Règlement']
+        
+        reserve_table = dash.dash_table.DataTable(
+            data=reserve_summary.to_dict("records"),
+            columns=[{"name": i, "id": i} for i in reserve_summary.columns],
+            page_size=10,
+        )
+        
         # Create the table and message
         children = html.Div([
             html.H5(f"File {filename} successfully uploaded and processed."),
@@ -119,10 +159,16 @@ def register_callbacks(app):
             heatmap_fig,  # Heatmap figure
             bar_fig,  # Bar chart figure
             line_fig,  # Line plot figure
+            cumulative_fig,  # Cumulative claims figure
+            claims_dist_fig,  # Claims distribution figure
+            reserve_table,  # Reserve summary table
             {"display": "none"},  # Hide upload button
             {"display": "block"},  # Show heatmap
             {"display": "block"},  # Show bar chart
             {"display": "block"},  # Show line plot
+            {"display": "block"},  # Show cumulative claims plot
+            {"display": "block"},  # Show claims distribution plot
+            {"display": "block"},  # Show reserve summary
         )
 
     @app.callback(
@@ -144,3 +190,27 @@ def register_callbacks(app):
         if n_clicks:
             return not is_open
         return is_open
+
+    # New callback for model selection
+    @app.callback(
+        Output("selected-model-output", "children"),  # Placeholder for model selection output
+        [Input("reserving-model-dropdown", "value")]
+    )
+    def update_model_selection(selected_model):
+        # Log the selected model (for now)
+        print(f"Selected Model: {selected_model}")
+        return f"Selected Model: {selected_model}"
+    
+    @app.callback(
+    Output("model-selection-row", "style"),  # Control visibility of the model selection row
+    [Input("upload-data", "contents"),  # Triggered when data is uploaded
+     Input("reserving-model-dropdown", "value")],  # Triggered when a model is selected
+    [State("upload-data", "filename")]  # State for filename
+    )
+    def hide_model_selection(contents, selected_model, filename):
+    # Hide the model selection row if data is uploaded and a model is selected
+        if contents is not None and selected_model is not None:
+            return {"display": "none"}  # Hide the row
+        return {"display": "block"}  # Show the rowi
+    
+    

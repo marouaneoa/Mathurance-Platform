@@ -1,6 +1,5 @@
 from dash import html, dcc
 import dash_bootstrap_components as dbc
-# import Style from Dash Bootstrap Components
 from dash_bootstrap_components._components import Offcanvas
 
 # Sidebar Layout
@@ -40,7 +39,7 @@ sidebar = dbc.Offcanvas(
     title="Mathurance Platform",
     is_open=False,
     placement="start",
-    style={"backgroundColor": "#1675e0"},  # Base color for sidebar
+    style={"backgroundColor": "white"},  # Base color for sidebar
 )
 
 # Home Page Layout
@@ -50,37 +49,59 @@ home_layout = dbc.Container([
         "Your one-stop solution for advanced actuarial analysis and claims forecasting.",
         style={"color": "#333333", "fontSize": "18px", "marginBottom": "30px"}
     ),
-    dcc.Upload(
-        id="upload-data",
-        children=html.Div(
-            [
-                html.A(
-                    "Upload your sheet",
-                    style={
-                        "color": "white",
-                        "textDecoration": "none",
-                        "cursor": "pointer",
-                    },
+    dbc.Row(
+        [
+            dbc.Col(
+                dcc.Upload(
+                    id="upload-data",
+                    children=html.Div(
+                        [
+                            html.A(
+                                "Upload your sheet",
+                                style={
+                                    "color": "white",
+                                    "textDecoration": "none",
+                                    "cursor": "pointer",
+                                },
+                            ),
+                        ],
+                        style={
+                            "width": "100%",
+                            "height": "60px",
+                            "lineHeight": "60px",
+                            "borderWidth": "1px",
+                            "borderStyle": "solid",
+                            "borderColor": "#1675e0",  # Base color for border
+                            "borderRadius": "5px",
+                            "textAlign": "center",
+                            "margin": "10px",
+                            "backgroundColor": "#1675e0",  # Base color for button
+                            "color": "white",  # White text
+                            "cursor": "pointer",  # Pointer cursor on hover
+                            "transition": "background-color 0.3s",  # Smooth transition for hover effect
+                        },
+                    ),
+                    className="upload-button",
+                    multiple=False,
                 ),
-            ],
-            style={
-                "width": "100%",
-                "height": "60px",
-                "lineHeight": "60px",
-                "borderWidth": "1px",
-                "borderStyle": "solid",
-                "borderColor": "#1675e0",  # Base color for border
-                "borderRadius": "5px",
-                "textAlign": "center",
-                "margin": "10px",
-                "backgroundColor": "#1675e0",  # Base color for button
-                "color": "white",  # White text
-                "cursor": "pointer",  # Pointer cursor on hover
-                "transition": "background-color 0.3s",  # Smooth transition for hover effect
-            },
-        ),
-        className="upload-button",
-        multiple=False,
+                md=8,  # Adjust column width for the upload button
+            ),
+            dbc.Col(
+                dcc.Dropdown(
+                    id="reserving-model-dropdown",
+                    options=[
+                        {"label": "Chain-Ladder", "value": "chain_ladder"},
+                        {"label": "Bornhuetter-Ferguson", "value": "bornhuetter_ferguson"},
+                        {"label": "Cape Cod", "value": "cape_cod"},
+                    ],
+                    value="chain_ladder",  # Default selection
+                    clearable=False,
+                    style={"width": "100%", "marginTop": "10px"},  # Style for the dropdown
+                ),
+                md=4,  # Adjust column width for the dropdown
+            ),
+        ],
+        className="mb-4",  # Add margin below the row
     ),
     html.Div(id="output-data-upload"),
     dbc.Row([
@@ -89,7 +110,24 @@ home_layout = dbc.Container([
     ]),
     dbc.Row([
         dbc.Col(dcc.Graph(id="line-projection", style={"display": "none"}), md=12)  # Hidden initially
-    ])
+    ]),
+    dbc.Row([
+        dbc.Col(dcc.Graph(id="cumulative-claims", style={"display": "none"}), md=6),  # New plot: Cumulative claims over time
+        dbc.Col(dcc.Graph(id="claims-distribution", style={"display": "none"}), md=6),  # New plot: Claims distribution by year
+    ]),
+    dbc.Row([
+        dbc.Col(html.Div(id="reserve-summary", style={"display": "none"}), md=12)  # New table: Reserve summary
+    ]),
+    dbc.Row([
+        dbc.Col(dcc.Graph(id="risk-factor-product", style={"display": "none"}), md=6),  # New plot: Risk factor by product
+        dbc.Col(dcc.Graph(id="risk-factor-sub-branch", style={"display": "none"}), md=6),  # New plot: Risk factor by sub-branch
+    ]),
+    dbc.Row([
+        dbc.Col(
+            html.Div(id="next-year-prediction", style={"display": "none"}),  # Hidden initially
+            md=12,
+        ),
+    ]),
 ], fluid=True, style={"padding": "20px"})
 
 # About Page Layout
@@ -119,13 +157,5 @@ layout = html.Div(
         ),
         sidebar,
         html.Div(id='page-content', style={"margin-left": "2rem", "padding": "2rem"}),
-        
-        # Add custom CSS for the upload button
-        #html.Style("""
-         #   .upload-button:hover {
-          #      background-color: #1357b3 !important;  /* Darker shade of base color on hover */
-           #     border-color: #1357b3 !important;  /* Darker border on hover */
-            #}
-        #""")
     ]
 )
