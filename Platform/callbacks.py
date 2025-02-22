@@ -3,7 +3,7 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 from utils import parse_contents, create_triangle, compute_chain_ladder_factors, project_triangle
-from layout import home_layout, about_layout, scenario_analysis_layout, upload_section, loading_message
+from layout import home_layout, about_layout, scenario_analysis_layout, upload_section, chatbot_layout
 from dash import html, dcc
 import dash
 from dash.exceptions import PreventUpdate
@@ -150,7 +150,7 @@ def register_callbacks(app, model):
                 )
             except Exception as e:
                 interpretation_message = html.Div(
-                    html.P(f"Bot: Error generating interpretation. Please try again.", style={"color": "red"}),
+                    html.P(f"In order to keep the data private, local LLM will be integrated and used to interpret data and help in decision making", style={"color": "green"}),
                     style={"textAlign": "left", "marginBottom": "10px"}
                 )
             
@@ -166,7 +166,7 @@ def register_callbacks(app, model):
                 {"display": "block"},  # Show chatbot
                 [interpretation_message],  # Add interpretation to chat history
                 "",  # Clear input box
-                upload_section  # Restore upload button
+                html.Div()  # Hide the upload button by returning an empty Div
             )
 
         elif triggered_id == "send-button":
@@ -222,6 +222,8 @@ def register_callbacks(app, model):
             return about_layout
         elif pathname == '/scenario-analysis':
             return scenario_analysis_layout
+        elif pathname == '/chatbot':
+            return chatbot_layout
         else:
             return home_layout
 

@@ -145,6 +145,7 @@ chatbot_layout = html.Div(
 )
 
 # Home Page Layout
+# Home Page Layout
 home_layout = dbc.Container([
     html.H1("Welcome to the Mathurance Platform", className="my-4", style={"color": "#1675e0"}),
     html.P(
@@ -153,30 +154,31 @@ home_layout = dbc.Container([
     ),
     dcc.Store(id="loading-state", data=False),  # Store to track loading state
     html.Div(id="dynamic-upload-section", children=upload_section),  # Dynamic section for upload/loading message
-    html.Div(id="output-data-upload"),
+    html.Div(id="output-data-upload", className="mb-5"),  # Add margin-bottom to the table
     loading_interval,  # Interval to control loading message
     dbc.Row([
-        dbc.Col(dcc.Graph(id="heatmap-triangle", style={"display": "none"}), md=6),  # Hidden initially
-        dbc.Col(dcc.Graph(id="bar-factors", style={"display": "none"}), md=6),  # Hidden initially
+        dbc.Col(dcc.Graph(id="heatmap-triangle", style={"display": "none"}), md=6, className="mb-4"),  # Add margin-bottom
+        dbc.Col(dcc.Graph(id="bar-factors", style={"display": "none"}), md=6, className="mb-4"),  # Add margin-bottom
     ]),
     dbc.Row([
-        dbc.Col(dcc.Graph(id="line-projection", style={"display": "none"}), md=12)  # Hidden initially
+        dbc.Col(dcc.Graph(id="line-projection", style={"display": "none"}), md=12, className="mb-5"),  # Add more margin-bottom
     ]),
     dbc.Row([
-        dbc.Col(dcc.Graph(id="cumulative-claims", style={"display": "none"}), md=6),  # New plot: Cumulative claims over time
-        dbc.Col(dcc.Graph(id="claims-distribution", style={"display": "none"}), md=6),  # New plot: Claims distribution by year
+        dbc.Col(dcc.Graph(id="cumulative-claims", style={"display": "none"}), md=6, className="mb-4"),  # Add margin-bottom
+        dbc.Col(dcc.Graph(id="claims-distribution", style={"display": "none"}), md=6, className="mb-4"),  # Add margin-bottom
     ]),
     dbc.Row([
-        dbc.Col(html.Div(id="reserve-summary", style={"display": "none"}), md=12)  # New table: Reserve summary
+        dbc.Col(html.Div(id="reserve-summary", style={"display": "none"}), md=12, className="mb-5"),  # Add more margin-bottom
     ]),
     dbc.Row([
-        dbc.Col(dcc.Graph(id="risk-factor-product", style={"display": "none"}), md=6),  # New plot: Risk factor by product
-        dbc.Col(dcc.Graph(id="risk-factor-sub-branch", style={"display": "none"}), md=6),  # New plot: Risk factor by sub-branch
+        dbc.Col(dcc.Graph(id="risk-factor-product", style={"display": "none"}), md=6, className="mb-4"),  # Add margin-bottom
+        dbc.Col(dcc.Graph(id="risk-factor-sub-branch", style={"display": "none"}), md=6, className="mb-4"),  # Add margin-bottom
     ]),
     dbc.Row([
         dbc.Col(
             html.Div(id="next-year-prediction", style={"display": "none"}),  # Hidden initially
             md=12,
+            className="mb-5",  # Add more margin-bottom
         ),
     ]),
     chatbot_layout  # Add the chatbot to the home layout
