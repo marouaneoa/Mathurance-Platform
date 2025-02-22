@@ -63,43 +63,60 @@ sidebar = dbc.Offcanvas(
     style={"backgroundColor": "white"},  # Base color for sidebar
 )
 
-# Upload Section
-upload_section = html.Div(
-    id="upload-section",
-    children=[
-        dcc.Upload(
-            id="upload-data",
-            children=html.Div(
-                [
-                    html.A(
-                        "Upload your sheet",
-                        style={
-                            "color": "white",
-                            "textDecoration": "none",
-                            "cursor": "pointer",
-                        },
-                    ),
-                ],
-                style={
-                    "width": "100%",
-                    "height": "60px",
-                    "lineHeight": "60px",
-                    "borderWidth": "1px",
-                    "borderStyle": "solid",
-                    "borderColor": "#1675e0",  # Base color for border
-                    "borderRadius": "5px",
-                    "textAlign": "center",
-                    "margin": "10px",
-                    "backgroundColor": "#1675e0",  # Base color for button
-                    "color": "white",  # White text
-                    "cursor": "pointer",  # Pointer cursor on hover
-                    "transition": "background-color 0.3s",  # Smooth transition for hover effect
-                },
+# Upload Section with Dropdown
+upload_section = dbc.Row(
+    [
+        dbc.Col(
+            dcc.Upload(
+                id="upload-data",
+                children=html.Div(
+                    [
+                        html.A(
+                            "Upload your sheet",
+                            style={
+                                "color": "white",
+                                "textDecoration": "none",
+                                "cursor": "pointer",
+                            },
+                        ),
+                    ],
+                    style={
+                        "width": "100%",
+                        "height": "60px",
+                        "lineHeight": "60px",
+                        "borderWidth": "1px",
+                        "borderStyle": "solid",
+                        "borderColor": "#1675e0",  # Base color for border
+                        "borderRadius": "5px",
+                        "textAlign": "center",
+                        "margin": "10px",
+                        "backgroundColor": "#1675e0",  # Base color for button
+                        "color": "white",  # White text
+                        "cursor": "pointer",  # Pointer cursor on hover
+                        "transition": "background-color 0.3s",  # Smooth transition for hover effect
+                    },
+                ),
+                className="upload-button",
+                multiple=False,
             ),
-            className="upload-button",
-            multiple=False,
+            md=8,  # Adjust column width for the upload button
         ),
-    ]
+        dbc.Col(
+            dcc.Dropdown(
+                id="model-dropdown",
+                options=[
+                    {"label": "Chain-Ladder", "value": "chain_ladder"},
+                    {"label": "Bornhuetter-Ferguson", "value": "bornhuetter_ferguson"},
+                    {"label": "Cape Cod", "value": "cape_cod"},
+                ],
+                value="chain_ladder",  # Default selection
+                clearable=False,
+                style={"width": "100%", "marginTop": "10px"},  # Style for the dropdown
+            ),
+            md=4,  # Adjust column width for the dropdown
+        ),
+    ],
+    className="mb-4",  # Add margin below the row
 )
 
 # Loading Message
