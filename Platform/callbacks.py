@@ -3,19 +3,12 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 from utils import parse_contents, create_triangle, compute_chain_ladder_factors, project_triangle
-from layout import home_layout, about_layout, scenario_analysis_layout, upload_section, loading_message, chatbot_layout
+from layout import home_layout, about_layout, scenario_analysis_layout, upload_section, loading_message
 from dash import html, dcc
 import dash
 from dash.exceptions import PreventUpdate
 
-def register_callbacks(app, model=None):
-    """
-    Register all callbacks for the Dash app.
-    
-    Args:
-        app: The Dash app instance.
-        model: Optional LLM for generating chatbot responses. If None, a placeholder is used.
-    """
+def register_callbacks(app, model):
     @app.callback(
         [Output("output-data-upload", "children"),
          Output("heatmap-triangle", "figure"),
@@ -24,7 +17,7 @@ def register_callbacks(app, model=None):
          Output("heatmap-triangle", "style"),
          Output("bar-factors", "style"),
          Output("line-projection", "style"),
-         Output("chat-interface", "style"),  # Control chat interface visibility
+         Output("chatbot-container", "style"),  # Control chatbot visibility
          Output("chat-history", "children"),  # Update chat history
          Output("user-input", "value"),  # Clear input box
          Output("dynamic-upload-section", "children")],  # Control upload/loading message section
@@ -140,7 +133,28 @@ def register_callbacks(app, model=None):
                 )
             ])
             
-            # Show the chat interface after successful upload
+            # Generate an interpretation of the plots using Gemini
+            interpretation_prompt = f"""
+            You are an expert in actuarial science and data visualization. Interpret the following plots:
+            1. Heatmap: {heatmap_fig.layout.title.text}
+            2. Bar Chart: {bar_fig.layout.title.text}
+            3. Line Plot: {line_fig.layout.title.text}
+
+            Provide a detailed analysis of the trends, patterns, and insights from these plots.
+            """
+            try:
+                interpretation = model.generate_content(interpretation_prompt)
+                interpretation_message = html.Div(
+                    dcc.Markdown(f"**Bot:**\n\n{interpretation.text}"),  # Use Markdown for formatting
+                    style={"textAlign": "left", "marginBottom": "10px"}
+                )
+            except Exception as e:
+                interpretation_message = html.Div(
+                    html.P(f"Bot: Error generating interpretation. Please try again.", style={"color": "red"}),
+                    style={"textAlign": "left", "marginBottom": "10px"}
+                )
+            
+            # Show plots, table, and chatbot after successful upload
             return (
                 children,  # Table and message
                 heatmap_fig,  # Heatmap figure
@@ -149,10 +163,10 @@ def register_callbacks(app, model=None):
                 {"display": "block"},  # Show heatmap
                 {"display": "block"},  # Show bar chart
                 {"display": "block"},  # Show line plot
-                {"display": "block"},  # Show chat interface
-                [],  # Clear chat history
+                {"display": "block"},  # Show chatbot
+                [interpretation_message],  # Add interpretation to chat history
                 "",  # Clear input box
-                html.Div()  # Hide upload section
+                upload_section  # Restore upload button
             )
 
         elif triggered_id == "send-button":
@@ -167,25 +181,20 @@ def register_callbacks(app, model=None):
             )
             chat_history = chat_history + [user_message] if chat_history else [user_message]
 
-            # Get chatbot response (with or without LLM)
-            if model:
-                try:
-                    response = model.generate_content(user_input)
-                    bot_message = html.Div(
-                        dcc.Markdown(f"**Bot:**\n\n{response.text}"),  # Use Markdown for formatting
-                        style={"textAlign": "left", "marginBottom": "10px"}
-                    )
-                except Exception as e:
-                    bot_message = html.Div(
-                        html.P(f"Bot: Error processing your request. Please try again.", style={"color": "red"}),
-                        style={"textAlign": "left", "marginBottom": "10px"}
-                    )
-            else:
+            # Get chatbot response using Gemini API
+            try:
+                response = model.generate_content(user_input)
                 bot_message = html.Div(
-                    html.P(f"Bot: LLM is not enabled. You said: {user_input}", style={"color": "gray"}),
+                    dcc.Markdown(f"**Bot:**\n\n{response.text}"),  # Use Markdown for formatting
                     style={"textAlign": "left", "marginBottom": "10px"}
                 )
-            chat_history.append(bot_message)
+                chat_history.append(bot_message)
+            except Exception as e:
+                error_message = html.Div(
+                    html.P(f"Bot: Error processing your request. Please try again.", style={"color": "red"}),
+                    style={"textAlign": "left", "marginBottom": "10px"}
+                )
+                chat_history.append(error_message)
 
             return (
                 dash.no_update,  # No change to output-data-upload
@@ -195,7 +204,7 @@ def register_callbacks(app, model=None):
                 dash.no_update,  # No change to heatmap-triangle style
                 dash.no_update,  # No change to bar-factors style
                 dash.no_update,  # No change to line-projection style
-                dash.no_update,  # No change to chat-interface style
+                dash.no_update,  # No change to chatbot-container style
                 chat_history,  # Update chat history
                 "",  # Clear input box
                 dash.no_update  # No change to upload/loading message section
@@ -213,8 +222,6 @@ def register_callbacks(app, model=None):
             return about_layout
         elif pathname == '/scenario-analysis':
             return scenario_analysis_layout
-        elif pathname == '/chatbot':
-            return chatbot_layout
         else:
             return home_layout
 

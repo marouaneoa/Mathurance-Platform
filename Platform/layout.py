@@ -299,31 +299,22 @@ scenario_analysis_layout = dbc.Container([
 chatbot_layout = dbc.Container([
     html.H1("Chatbot", className="my-4", style={"color": "#1675e0"}),
     html.P(
-        "Upload your data to start chatting with the chatbot.",
+        "Ask questions about your data and get insights from the chatbot.",
         style={"color": "#333333", "fontSize": "18px", "marginBottom": "30px"}
     ),
-    # File upload section
-    html.Div(id="dynamic-upload-section", children=upload_section),
-    # Chat interface (hidden initially)
     html.Div(
-        id="chat-interface",
-        style={"display": "none"},  # Hidden initially
-        children=[
-            html.Div(
-                id="chat-history",
-                style={
-                    "height": "300px",
-                    "overflowY": "scroll",
-                    "border": "1px solid #ddd",
-                    "padding": "10px",
-                    "marginBottom": "10px",
-                    "backgroundColor": "#f9f9f9",  # Light background for chat history
-                },
-            ),
-            dbc.Input(id="user-input", placeholder="Ask me about the data...", type="text", style={"marginBottom": "10px"}),
-            dbc.Button("Send", id="send-button", color="primary"),
-        ]
+        id="chat-history",
+        style={
+            "height": "300px",
+            "overflowY": "scroll",
+            "border": "1px solid #ddd",
+            "padding": "10px",
+            "marginBottom": "10px",
+            "backgroundColor": "#f9f9f9",  # Light background for chat history
+        },
     ),
+    dbc.Input(id="user-input", placeholder="Ask me about the plots...", type="text", style={"marginBottom": "10px"}),
+    dbc.Button("Send", id="send-button", color="primary"),
 ], fluid=True, style={"padding": "20px"})
 
 # Main Layout
