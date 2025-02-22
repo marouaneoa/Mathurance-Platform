@@ -1,6 +1,5 @@
 from dash import html, dcc
 import dash_bootstrap_components as dbc
-from dash_bootstrap_components._components import Offcanvas
 
 # Sidebar Layout
 sidebar = dbc.Offcanvas(
@@ -20,8 +19,19 @@ sidebar = dbc.Offcanvas(
                     }
                 ),
                 dbc.NavLink(
-                    "Scenario Analysis",  # New page
+                    "Scenario Analysis", 
                     href="/scenario-analysis", 
+                    active="exact", 
+                    style={
+                        "color": "white",  # White text
+                        "margin": "5px", 
+                        "borderRadius": "5px",
+                        "backgroundColor": "#1357b3",  # Darker shade of base color
+                    }
+                ),
+                dbc.NavLink(
+                    "Chatbot",  # New page
+                    href="/chatbot", 
                     active="exact", 
                     style={
                         "color": "white",  # White text
@@ -53,6 +63,87 @@ sidebar = dbc.Offcanvas(
     style={"backgroundColor": "white"},  # Base color for sidebar
 )
 
+# Upload Section
+upload_section = html.Div(
+    id="upload-section",
+    children=[
+        dcc.Upload(
+            id="upload-data",
+            children=html.Div(
+                [
+                    html.A(
+                        "Upload your sheet",
+                        style={
+                            "color": "white",
+                            "textDecoration": "none",
+                            "cursor": "pointer",
+                        },
+                    ),
+                ],
+                style={
+                    "width": "100%",
+                    "height": "60px",
+                    "lineHeight": "60px",
+                    "borderWidth": "1px",
+                    "borderStyle": "solid",
+                    "borderColor": "#1675e0",  # Base color for border
+                    "borderRadius": "5px",
+                    "textAlign": "center",
+                    "margin": "10px",
+                    "backgroundColor": "#1675e0",  # Base color for button
+                    "color": "white",  # White text
+                    "cursor": "pointer",  # Pointer cursor on hover
+                    "transition": "background-color 0.3s",  # Smooth transition for hover effect
+                },
+            ),
+            className="upload-button",
+            multiple=False,
+        ),
+    ]
+)
+
+# Loading Message
+loading_message = html.Div(
+    id="loading-message",
+    children=[
+        html.P(
+            "Please wait, your data is being preprocessed...",
+            style={"color": "#1675e0", "fontSize": "18px", "textAlign": "center", "margin": "20px"}
+        )
+    ],
+    style={"display": "none"}  # Initially hidden
+)
+
+# Loading Interval
+loading_interval = dcc.Interval(
+    id="loading-interval",
+    interval=1000,  # Check every 1 second
+    n_intervals=0,
+    disabled=True  # Disabled by default
+)
+
+# Chatbot Layout
+chatbot_layout = html.Div(
+    id="chatbot-container",
+    style={"display": "none"},  # Hidden initially
+    children=[
+        html.H3("Chatbot", className="my-4", style={"color": "#1675e0"}),
+        html.Div(
+            id="chat-history",
+            style={
+                "height": "300px",
+                "overflowY": "scroll",
+                "border": "1px solid #ddd",
+                "padding": "10px",
+                "marginBottom": "10px",
+                "backgroundColor": "#f9f9f9",  # Light background for chat history
+            },
+        ),
+        dbc.Input(id="user-input", placeholder="Ask me about the plots...", type="text", style={"marginBottom": "10px"}),
+        dbc.Button("Send", id="send-button", color="primary"),
+    ]
+)
+
 # Home Page Layout
 home_layout = dbc.Container([
     html.H1("Welcome to the Mathurance Platform", className="my-4", style={"color": "#1675e0"}),
@@ -60,61 +151,10 @@ home_layout = dbc.Container([
         "Your one-stop solution for advanced actuarial analysis and claims forecasting.",
         style={"color": "#333333", "fontSize": "18px", "marginBottom": "30px"}
     ),
-    dbc.Row(
-        [
-            dbc.Col(
-                dcc.Upload(
-                    id="upload-data",
-                    children=html.Div(
-                        [
-                            html.A(
-                                "Upload your sheet",
-                                style={
-                                    "color": "white",
-                                    "textDecoration": "none",
-                                    "cursor": "pointer",
-                                },
-                            ),
-                        ],
-                        style={
-                            "width": "100%",
-                            "height": "60px",
-                            "lineHeight": "60px",
-                            "borderWidth": "1px",
-                            "borderStyle": "solid",
-                            "borderColor": "#1675e0",  # Base color for border
-                            "borderRadius": "5px",
-                            "textAlign": "center",
-                            "margin": "10px",
-                            "backgroundColor": "#1675e0",  # Base color for button
-                            "color": "white",  # White text
-                            "cursor": "pointer",  # Pointer cursor on hover
-                            "transition": "background-color 0.3s",  # Smooth transition for hover effect
-                        },
-                    ),
-                    className="upload-button",
-                    multiple=False,
-                ),
-                md=8,  # Adjust column width for the upload button
-            ),
-            dbc.Col(
-                dcc.Dropdown(
-                    id="reserving-model-dropdown",
-                    options=[
-                        {"label": "Chain-Ladder", "value": "chain_ladder"},
-                        {"label": "Bornhuetter-Ferguson", "value": "bornhuetter_ferguson"},
-                        {"label": "Cape Cod", "value": "cape_cod"},
-                    ],
-                    value="chain_ladder",  # Default selection
-                    clearable=False,
-                    style={"width": "100%", "marginTop": "10px"},  # Style for the dropdown
-                ),
-                md=4,  # Adjust column width for the dropdown
-            ),
-        ],
-        className="mb-4",  # Add margin below the row
-    ),
+    dcc.Store(id="loading-state", data=False),  # Store to track loading state
+    html.Div(id="dynamic-upload-section", children=upload_section),  # Dynamic section for upload/loading message
     html.Div(id="output-data-upload"),
+    loading_interval,  # Interval to control loading message
     dbc.Row([
         dbc.Col(dcc.Graph(id="heatmap-triangle", style={"display": "none"}), md=6),  # Hidden initially
         dbc.Col(dcc.Graph(id="bar-factors", style={"display": "none"}), md=6),  # Hidden initially
@@ -139,6 +179,17 @@ home_layout = dbc.Container([
             md=12,
         ),
     ]),
+    chatbot_layout  # Add the chatbot to the home layout
+], fluid=True, style={"padding": "20px"})
+
+# About Page Layout
+about_layout = dbc.Container([
+    html.H1("About Mathurance Platform", className="my-4", style={"color": "#1675e0"}),
+    html.P(
+        "The Mathurance Platform is designed to provide advanced actuarial tools for claims forecasting and analysis. "
+        "Our platform leverages the Chain-Ladder method to help you make data-driven decisions with confidence.",
+        style={"color": "#333333", "fontSize": "18px"}
+    )
 ], fluid=True, style={"padding": "20px"})
 
 # Scenario Analysis Page Layout
@@ -174,6 +225,7 @@ scenario_analysis_layout = dbc.Container([
                 ]),
             ),
             md=6,
+            className="mb-4",  # Add margin-bottom to this column
         ),
         dbc.Col(
             dbc.Card(
@@ -200,50 +252,78 @@ scenario_analysis_layout = dbc.Container([
                 ]),
             ),
             md=6,
+            className="mb-4",  # Add margin-bottom to this column
         ),
-    ]),
+    ], className="mb-4"),  # Add margin-bottom to the entire row
     dbc.Row([
         dbc.Col(
             dcc.Graph(id="scenario-line-plot"),
             md=12,
+            className="mb-4",  # Add margin-bottom to this column
         ),
     ]),
     dbc.Row([
         dbc.Col(
             html.Div(id="scenario-summary-table"),
             md=12,
+            className="mb-4",  # Add margin-bottom to this column
         ),
     ]),
     dbc.Row([
         dbc.Col(
             dcc.Graph(id="inflation-trend-plot"),
             md=6,
+            className="mb-4",  # Add margin-bottom to this column
         ),
         dbc.Col(
             dcc.Graph(id="claims-by-product-plot"),
             md=6,
+            className="mb-4",  # Add margin-bottom to this column
         ),
     ]),
     dbc.Row([
         dbc.Col(
             dcc.Graph(id="claims-by-sub-branch-plot"),
             md=6,
+            className="mb-4",  # Add margin-bottom to this column
         ),
         dbc.Col(
             dcc.Graph(id="claims-forecast-plot"),
             md=6,
+            className="mb-4",  # Add margin-bottom to this column
         ),
     ]),
 ], fluid=True, style={"padding": "20px"})
 
-# About Page Layout
-about_layout = dbc.Container([
-    html.H1("About Mathurance Platform", className="my-4", style={"color": "#1675e0"}),
+# Chatbot Page Layout
+chatbot_layout = dbc.Container([
+    html.H1("Chatbot", className="my-4", style={"color": "#1675e0"}),
     html.P(
-        "The Mathurance Platform is designed to provide advanced actuarial tools for claims forecasting and analysis. "
-        "Our platform leverages the Chain-Ladder method to help you make data-driven decisions with confidence.",
-        style={"color": "#333333", "fontSize": "18px"}
-    )
+        "Upload your data to start chatting with the chatbot.",
+        style={"color": "#333333", "fontSize": "18px", "marginBottom": "30px"}
+    ),
+    # File upload section
+    html.Div(id="dynamic-upload-section", children=upload_section),
+    # Chat interface (hidden initially)
+    html.Div(
+        id="chat-interface",
+        style={"display": "none"},  # Hidden initially
+        children=[
+            html.Div(
+                id="chat-history",
+                style={
+                    "height": "300px",
+                    "overflowY": "scroll",
+                    "border": "1px solid #ddd",
+                    "padding": "10px",
+                    "marginBottom": "10px",
+                    "backgroundColor": "#f9f9f9",  # Light background for chat history
+                },
+            ),
+            dbc.Input(id="user-input", placeholder="Ask me about the data...", type="text", style={"marginBottom": "10px"}),
+            dbc.Button("Send", id="send-button", color="primary"),
+        ]
+    ),
 ], fluid=True, style={"padding": "20px"})
 
 # Main Layout
